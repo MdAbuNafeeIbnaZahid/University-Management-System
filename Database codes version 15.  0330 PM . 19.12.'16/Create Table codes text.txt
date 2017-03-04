@@ -1,0 +1,123 @@
+CREATE TABLE Dept
+(
+	Department_ID NUMBER CONSTRAINT DEPT_PK PRIMARY KEY,
+	Department_Name VARCHAR2(200) UNIQUE NOT NULL,
+	Head_ID NUMBER UNIQUE
+	--CONSTRAINT Dept_FK_1 FOREIGN KEY(Head_ID) REFERENCES Teacher(Teacher_ID) ON DELETE SET NULL
+	-- Foreign Key constraint will be declared later
+);
+
+
+
+CREATE TABLE Teacher
+(
+	Teacher_ID NUMBER CONSTRAINT Teacher_PK PRIMARY KEY,
+	Username VARCHAR2(200) UNIQUE NOT NULL CONSTRAINT Valid_Username_Of_Teacher CHECK( LENGTH(Username) > 0 ),
+	--Password is showing BLUE in navicat
+	Pass VARCHAR2(200) NOT NULL CONSTRAINT Valid_Pass_Of_Teacher CHECK( LENGTH(Pass) > 0 ),
+	First_Name VARCHAR2(200) NOT NULL,
+	Last_Name VARCHAR2(200) NOT NULL,
+	Address VARCHAR2(200),
+	Phone_Number VARCHAR2(200) UNIQUE NOT NULL CONSTRAINT Valid_Phone_Number_Of_Teacher CHECK( LENGTH(Phone_Number)=11 AND (Phone_Number LIKE '01%') ),
+	Email_Address VARCHAR2(20) UNIQUE NOT NULL CONSTRAINT Valid_Email_Address_Of_Teacher CHECK( Email_Address LIKE '_%@_%' ),
+	Salary NUMBER CONSTRAINT Min_Sal_Of_Teacher CHECK (Salary > 0),
+	Join_Date DATE DEFAULT SYSDATE,
+	Department_ID NUMBER
+	--CONSTRAINT Teacher_FK_1 FOREIGN KEY(Department_ID) REFERENCES Dept(Department_ID) ON DELETE CASCADE
+	-- Foreign Key Constraint will be declared later
+
+--Declared later
+--ALTER TABLE Teacher ADD CONSTRAINT Teacher_Valid_JOIN_DATE
+	--CHECK(JOIN_DATE > TO_DATE('01/01/1950', 'DD/MM/YYYY')  );
+--?	I will check whether the date is illogically future in the inserting function
+
+);
+
+
+CREATE TABLE Student
+(
+	Student_ID NUMBER CONSTRAINT Student_PK PRIMARY KEY,
+	Username VARCHAR2(200) UNIQUE NOT NULL CONSTRAINT Valid_Username_Of_Student CHECK( LENGTH(Username) > 0 ),
+	--Password is showing BLUE in navicat
+	Pass VARCHAR2(200) NOT NULL CONSTRAINT Valid_Pass_Of_Student CHECK( LENGTH(Pass) > 0 ),
+	First_Name VARCHAR2(200) NOT NULL,
+	Last_Name VARCHAR2(200) NOT NULL,
+	Address VARCHAR2(200) NOT NULL,
+	Phone_Number VARCHAR2(200) UNIQUE NOT NULL CONSTRAINT Valid_Phone_Number_Of_Student CHECK( LENGTH(Phone_Number)=11 AND (Phone_Number LIKE '01%') ),
+	Email_Address VARCHAR2(200) UNIQUE NOT NULL CONSTRAINT Valid_Email_Address_Of_Student CHECK( Email_Address LIKE '_%@_%' ),
+	Lev NUMBER CONSTRAINT Min_Level_Of_Student CHECK(Lev > 0), -- Level is showing blue
+	Term NUMBER CONSTRAINT Min_Term_Of_Student CHECK(Term > 0),
+	Department_ID NUMBER,
+	CONSTRAINT Student_FK_1 FOREIGN KEY (Department_ID) REFERENCES Dept(Department_ID) ON DELETE CASCADE  -- references Dept(Name)
+);
+
+CREATE TABLE Course
+(
+	Course_ID NUMBER CONSTRAINT Course_PK PRIMARY KEY,
+	COURSE_NUMBER VARCHAR2(200),
+	Course_Name VARCHAR2(200) NOT NULL,
+	Credit_Hours NUMBER CONSTRAINT Min_Credit_Of_A_Course CHECK (Credit_Hours >= 0.5),
+	Department_ID NUMBER NOT NULL, -- references Dept()
+	CONSTRAINT Course_FK_1 FOREIGN KEY (Department_ID) REFERENCES Dept(Department_ID) ON DELETE CASCADE,
+	CONSTRAINT COURSE_NUMBER_DEPT_ID_UNIQUE UNIQUE (COURSE_NUMBER, DEPARTMENT_ID)
+);
+
+-- Class is showing BLUE
+CREATE TABLE Class_Of_Course
+(
+	Class_ID NUMBER CONSTRAINT Class_Of_Course_PK PRIMARY KEY,
+	-- Session is showing blue
+	MONTH_OF_CLASS VARCHAR2(200) NOT NULL,
+	YEAR_OF_CLASS NUMBER NOT NULL,
+	Course_ID NUMBER NOT NULL, -- references Course(Course_ID)
+	CONSTRAINT Course_Of_Class_FK_1 FOREIGN KEY (Course_ID) REFERENCES Course(Course_ID) ON DELETE CASCADE,
+	CONSTRAINT MONTH_YEAR_COURSE_ID_UNIQUE UNIQUE (MONTH_OF_CLASS, YEAR_OF_CLASS, Course_ID)
+);
+
+
+ALTER TABLE Teacher ADD CONSTRAINT Teacher_FK_1
+	FOREIGN KEY (Department_ID) REFERENCES Dept(Department_ID) ON DELETE CASCADE;
+
+ALTER TABLE Dept ADD CONSTRAINT Dept_FK_1
+	FOREIGN KEY (Head_ID) REFERENCES Teacher(Teacher_ID) ON DELETE SET NULL;
+
+
+CREATE TABLE Department_Head_Log
+(
+	Department_ID NUMBER CONSTRAINT DEPARTMENT_HEAD_LOG_FK_1 REFERENCES DEPT(Department_ID) ON DELETE CASCADE,
+	HEAD_ID NUMBER CONSTRAINT DEPARTMENT_HEAD_LOG_FK_2 REFERENCES Teacher(Teacher_ID) ON DELETE CASCADE,
+	Start_Date DATE,
+	End_Date DATE ,
+	CONSTRAINT Department_Head_Log_PK PRIMARY KEY(Department_ID, Start_Date)
+);
+
+
+CREATE TABLE Enrolment
+(
+	Student_ID NUMBER REFERENCES Student(Student_ID) ON DELETE CASCADE,  
+	Class_ID NUMBER REFERENCES Class_Of_Course(Class_ID) ON DELETE CASCADE,
+	Grade VARCHAR2(200),
+	CONSTRAINT Enrolment_PK PRIMARY KEY (Student_ID, Class_ID)
+);
+
+CREATE TABLE Class_Teacher
+(
+	Class_ID NUMBER REFERENCES Class_Of_Course(Class_ID) ON DELETE CASCADE,
+	Teacher_ID NUMBER REFERENCES Teacher(Teacher_ID) ON DELETE CASCADE,
+	CONSTRAINT Class_Teacher_PK PRIMARY KEY (Class_ID, Teacher_ID) 
+);
+
+ALTER TABLE Teacher ADD CONSTRAINT Teacher_Valid_JOIN_DATE
+	CHECK(JOIN_DATE > TO_DATE('01/01/1950', 'DD/MM/YYYY')  );
+--?	I will check whether the date is illogically future in the inserting function
+
+
+ALTER TABLE Student ADD CONSTRAINT MAX_LEVEL_OF_STUDENT
+CHECK(LEV < 6  );
+
+ALTER TABLE Student ADD CONSTRAINT MAX_TERM_OF_STUDENT
+CHECK(TERM < 3  );
+
+
+ALTER TABLE TEACHER
+	ADD TEACHER_RANK VARCHAR2(200);

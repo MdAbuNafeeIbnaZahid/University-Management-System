@@ -1,0 +1,4 @@
+--Added a new constraint in teacher table that will ensure valid join_date. Join date can't be before 01/01/1950
+
+
+
